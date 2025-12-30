@@ -41,7 +41,7 @@ function YearbookModal({
   if (!isOpen) return null
 
   const goToPrevious = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length)
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length).
   }
 
   const goToNext = () => {
