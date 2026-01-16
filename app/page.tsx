@@ -1,13 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
+import InquiryForm from "@/components/InquiryForm";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import { track } from "@/lib/analytics";
+import type React from "react";
+import Link from "next/link";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChevronDown, ChevronUp, Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
 
-// Unified Yearbook-Style Modal Component for all popups
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronDown, ChevronUp, Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+
+
 function YearbookModal({
   isOpen,
   onClose,
@@ -50,7 +55,6 @@ function YearbookModal({
 
   const openFullVideo = () => {
     if (type === "video") {
-      // Open full screen video
       const videoSrc = images[currentIndex]
       const newWindow = window.open("", "_blank")
       if (newWindow) {
@@ -69,26 +73,25 @@ function YearbookModal({
     }
   }
 
-  // Dynamic sizing based on modalSize prop
   const getModalClasses = () => {
     switch (modalSize) {
       case "wide":
-        return "max-w-2xl max-h-[70vh]" // Wider for horizontal images
+        return "max-w-2xl max-h-[70vh]" 
       case "tall":
-        return "max-w-lg max-h-[90vh]" // Taller for vertical images
+        return "max-w-lg max-h-[90vh]" 
       default:
-        return "max-w-md max-h-[80vh]" // Default size
+        return "max-w-md max-h-[80vh]" 
     }
   }
 
   const getImageClasses = () => {
     switch (modalSize) {
       case "wide":
-        return "h-64" // Shorter height for wide modal
+        return "h-64"
       case "tall":
-        return "h-96" // Taller height for tall modal
+        return "h-96" 
       default:
-        return "h-80" // Default height
+        return "h-80" 
     }
   }
 
@@ -102,10 +105,9 @@ function YearbookModal({
           <X className="w-8 h-8" />
         </button>
 
-        {/* Yearbook-style frame */}
         <div className="bg-gradient-to-br from-amber-100 via-yellow-50 to-orange-100 rounded-3xl p-6 shadow-2xl border-4 border-amber-200">
           <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-2xl p-4 shadow-inner border-2 border-amber-300">
-            {/* Main content area */}
+           
             <div className="relative">
               <div
                 className={`relative ${getImageClasses()} rounded-xl overflow-hidden bg-white shadow-lg border-4 border-gray-200`}
@@ -551,7 +553,7 @@ export default function HomePage() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
       // Detect active section based on scroll position
-      const sections = ["home", "services", "portfolio", "client", "about", "contact"]
+      const sections = ["home", "services", "portfolio", "client","testimonials", "about", "contact"]
       const scrollPosition = window.scrollY + 100
 
       for (const section of sections) {
@@ -571,22 +573,33 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId)
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" })
-    }
-    setActiveSection(sectionId)
-    setIsMenuOpen(false)
-  }
+   // ✅ Feature #5: log page view once when page loads
+  useEffect(() => {
+    void track("view_page", { page: "home" });
+  }, []);
 
-  // WhatsApp function
+  const scrollToSection = (sectionId: string, meta: Record<string, unknown> = {}) => {
+    // Track only events that exist in DB enum
+    if (sectionId === "portfolio") {
+      void track("click_view_portfolio", { from: "navigation", ...meta });
+    }
+
+    const element = document.getElementById(sectionId);
+    if (element) element.scrollIntoView({ behavior: "smooth" });
+
+    setActiveSection(sectionId);
+    setIsMenuOpen(false);
+  };
+
   const openWhatsApp = () => {
-    const phoneNumber = "628111224478"
-    const message = "Mau nanya-nanya min soal Happy Friends Project"
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, "_blank")
-  }
+    void track("click_whatsapp", { from: activeSection ?? "unknown" });
+
+    const phoneNumber = "628111224478";
+    const message = "Mau nanya-nanya min soal Happy Friends Project";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
 
   // Real yearbook images
   const yearbookImages = [
@@ -793,6 +806,13 @@ export default function HomePage() {
             CLIENT
           </button>
           <button
+            onClick={() => scrollToSection("testimonials")}
+            className={`transition-colors font-bold ${activeSection === "testimonials" ? "text-purple-600" : "text-gray-800 hover:text-purple-600"
+              }`}
+          >
+            TESTIMONIALS
+          </button>
+          <button
             onClick={() => scrollToSection("about")}
             className={`transition-colors font-bold ${activeSection === "about" ? "text-purple-600" : "text-gray-800 hover:text-purple-600"
               }`}
@@ -806,6 +826,13 @@ export default function HomePage() {
           >
             CONTACT
           </button>
+          <Link
+            href="/quotes"
+            className="transition-colors font-bold text-gray-800 hover:text-purple-600"
+          >
+            QUOTES
+          </Link>
+
         </nav>
 
         <Button
@@ -864,6 +891,22 @@ export default function HomePage() {
             >
               CONTACT
             </button>
+            <Link
+              href="/quotes"
+              onClick={() => setIsMenuOpen(false)}
+              className="text-2xl transition-colors font-bold text-white hover:text-yellow-300"
+            >
+              QUOTES
+            </Link>
+            <button
+              onClick={() => scrollToSection("testimonials")}
+             className={`text-2xl transition-colors font-bold ${activeSection === "testimonials" ? "text-purple-400" : "text-white hover:text-yellow-300"
+                }`}
+            >
+              TESTIMONIALS
+            </button>
+
+
           </div>
         </div>
       )}
@@ -1119,6 +1162,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <TestimonialsSection />
+
       
       {/* About/Stats Section */}
       <section id="about" className="relative z-10 px-4 py-20">
@@ -1244,6 +1290,16 @@ export default function HomePage() {
                 </svg>
                 Hubungi kami
               </Button>
+              <div className="mt-10 mx-auto max-w-2xl">
+  <div className="rounded-3xl bg-white/95 p-6 md:p-8 shadow-2xl">
+    <h4 className="text-2xl font-black text-gray-900 mb-2">Atau isi form inquiry</h4>
+    <p className="text-gray-600 font-medium mb-6">
+      Biar tim kami bisa follow up lebih cepat & terdata.
+    </p>
+    <InquiryForm />
+  </div>
+</div>
+
             </div>
           </div>
         </section>
@@ -1401,4 +1457,12 @@ export default function HomePage() {
         />
       </div>
     )
+    type ApprovedTestimonial = {
+      id: string;
+      created_at: string;
+      name: string;
+      organization: string | null;
+      rating: number;
+      message: string;
+    };
   }
